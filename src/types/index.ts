@@ -1,4 +1,4 @@
-
+// MODEL
 export interface IItem {
   id: string;
   title: string;
@@ -26,3 +26,14 @@ export interface IOrderResponse {
 
 // ошибка
 export type FormErrors = Partial<Record<keyof IServerOrder, string>>;
+
+// VIEW 
+
+export interface IClickHandler {
+  onClick: (event: MouseEvent) => void;
+}
+
+export interface IView<T> {
+  render(data: T): HTMLElement;
+  update?(data: Partial<T>): void;
+}
