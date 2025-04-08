@@ -50,21 +50,6 @@ yarn build
 Дополнительно используются брокер событий (EventEmitter) и API-клиент (Api).
 ...
 
-## Базовые классы
-
-### Api
-
-Класс `Api` используется для работы с сервером.
-
-- `constructor(baseUrl: string, options?: RequestInit)` — инициализирует экземпляр API клиента.
-- `get(uri: string)` — выполняет GET-запрос.
-- `post(uri: string, data: object, method: 'POST' | 'PUT' | 'DELETE')` — выполняет POST/PUT/DELETE-запрос.
-- `handleResponse(response: Response)` — обрабатывает ответ сервера.
-
-Тип `ApiPostMethods = 'POST' | 'PUT' | 'DELETE'` определён внутри файла `api.ts`.
-
----
-
 ### EventEmitter
 
 Класс `EventEmitter` реализует паттерн "Наблюдатель" (Observer) и служит брокером событий. Он реализует интерфейс `IEvents`.
@@ -79,4 +64,147 @@ yarn build
 
 Интерфейс `IEvents` и связанные типы определены внутри `events.ts`.
 
----
+...
+
+## Модель (Model)
+## Api
+Задача: Базовый API-клиент. Используется для работы с сервером.
+
+Атрибуты:
+`baseUrl: string` — базовый адрес API
+`options: RequestInit` — заголовки и конфигурация
+
+Методы:
+`get(uri: string): Promise<any>` — запрос на получение данных
+`post(uri: string, data: object, method?: string): Promise<any>` — отправка данных
+`handleResponse(response: Response): Promise<object>` — обработка ответа
+
+## ProductModel
+Задача: Хранит и предоставляет список товаров из API.
+
+Атрибуты:
+`items: IItem[]` — массив товаров
+
+Методы:
+`setItems(items: IItem[])` — установить список товаров
+`getItemById(id: string): IItem | undefined` — получить товар по ID
+
+## CartModel
+Задача: Управляет товарами в корзине.
+
+Атрибуты:
+`items: ISelectedItem[]` — выбранные товары
+
+Методы:
+`addItem(item: ISelectedItem)` — добавить товар
+`removeItem(id: string)` — удалить товар
+`clear()` — очистить корзину
+`getTotal(): number` — получить общую сумму
+
+## FormModel
+Задача:
+Хранит форму заказа и выполняет её валидацию.
+
+Атрибуты:
+`form: IOrderForm` — данные формы
+
+Методы:
+`updateForm(data: Partial<IOrderForm>)` — обновить данные формы
+`validateForm(): FormErrors` — вернуть ошибки
+`getOrder(items: string[], total: number): IServerOrder` — сформировать заказ
+
+...
+
+## ПРЕДСТАВЛЕНИЯ (View)
+## CardView
+Задача: Отображает карточку товара.
+
+Атрибуты:
+`element: HTMLElement` — DOM-элемент карточки
+`data: IItem` — данные товара
+
+Методы:
+`render(data: IItem)` — отрисовка
+`setPrice(price: number)` — установка цены
+`setCategory(category: string)` — установка категории
+
+## CardPreviewView
+Задача: Показывает подробности товара с кнопкой "Купить".
+
+Методы:
+`renderFull()` — отрисовка полной карточки
+`disableIfNoPrice()` — скрыть кнопку при отсутствии цены
+
+## CartView
+Задача: Отображает корзину с товарами и суммой.
+
+Методы:
+`renderList(items: ISelectedItem[])`
+`renderTotal(sum: number)`
+
+## OrderView и ContactsView
+Задача: Формы для ввода адреса и контактов.
+
+Методы:
+`render(), update()`
+
+## ModalView
+Задача: Модальное окно.
+
+Методы:
+`open(content: HTMLElement)`
+`close`
+
+## SuccessView
+Задача: Экран успешного оформления заказа.
+
+Методы:
+`render(orderId: string, total: number)`
+
+...
+
+## ПРЕЗЕНТЕРЫ (Presenter)
+## AppPresenter
+Задача: Связка всех компонентов, инициализация проекта.
+
+Методы:
+`init()`
+`bindEvents()`
+`loadProducts()`
+
+## CartPresenter
+Задача: Логика добавления и удаления товаров из корзины.
+
+Методы:
+`handleAddItem()`
+`handleRemoveItem()`
+
+## OrderPresenter
+Задача: Работа с формой заказа и отправка.
+
+Методы:
+`submitOrder()`
+`validate()`
+
+...
+
+## Взаимодействие между слоями
+
+Всё взаимодействие реализовано через Presenter:
+1. View генерирует пользовательские события (например, клик по кнопке).
+2. Presenter слушает события и вызывает методы модели.
+3. Модель обновляет данные, Presenter сообщает View обновиться.
+
+Коммуникация реализована через брокер событий EventEmitter.
+
+ ... 
+ 
+## Пользовательские события
+
+- card:add - Добавление товара в корзину
+- card:remove -	Удаление товара из корзины
+- cart:clear -	Очистка корзины
+- form:update -	Обновление данных формы
+- form:submit -	Отправка формы заказа
+- order:success -	Заказ успешно оформлен
+- order:error -	Ошибка при оформлении заказа
