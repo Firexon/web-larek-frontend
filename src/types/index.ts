@@ -8,25 +8,6 @@ export interface IItem {
   price: number | null;
 }
 
-// корзина
-export interface ICartItem extends IItem {
-  index: number;
-}
-
-// Заказ до отправки
-export interface IOrderForm {
-  payment?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  total?: string | number;
-}
-
-// Готовый заказ для отправки
-export interface IOrder extends IOrderForm {
-  items: string[];
-}
-
 // Запрос при отправке заказа 
 export interface IServerOrder {
   payment: string;
@@ -37,3 +18,11 @@ export interface IServerOrder {
   items: string[];
 }
 
+// Ответ от сервера после заказа
+export interface IOrderResponse {
+  id: string;
+  total: number;
+}
+
+// ошибка
+export type FormErrors = Partial<Record<keyof IServerOrder, string>>;
