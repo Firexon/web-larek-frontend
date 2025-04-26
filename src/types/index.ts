@@ -1,39 +1,53 @@
-// MODEL
+// Тип карточки товара от сервера
 export interface IItem {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  category: string; 
-  price: number | null;
+	id: string;
+	title: string;
+	description: string;
+	image: string;
+	category: string;
+	price: number | null;
 }
 
-// Запрос при отправке заказа 
-export interface IServerOrder {
-  payment: string;
-  email: string;
-  phone: string;
-  address: string;
-  total: number;
-  items: string[];
+// Тип выбранного товара для корзины
+export interface ISelectedItem {
+	id: string;
+	title: string;
+	price: number;
 }
 
-// Ответ от сервера после заказа
+// Типы для формы заказа (шаги оформления)
+export interface IOrderForm {
+	address?: string;
+	payment?: string;
+	email?: string;
+	phone?: string;
+}
+
+export interface IOrderContacts {
+	email: string;
+	phone: string;
+}
+
+// Полный заказ, отправляемый на сервер
+export interface IServerOrder extends IOrderForm {
+	items: string[];
+	total: number;
+}
+
+// Ответ от сервера после отправки заказа
 export interface IOrderResponse {
-  id: string;
-  total: number;
+	id: string;
+	total: number;
 }
 
-// ошибка
-export type FormErrors = Partial<Record<keyof IServerOrder, string>>;
+// Тип для хранения ошибок формы
+export type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 
-// VIEW 
-
+// Обработчик клика (на карточке, кнопке, и т.д.)
 export interface IClickHandler {
-  onClick: (event: MouseEvent) => void;
+	onClick: (event: MouseEvent) => void;
 }
 
-export interface IView<T> {
-  render(data: T): HTMLElement;
-  update?(data: Partial<T>): void;
+export interface IActions {
+	onClick: (event: MouseEvent) => void;
 }
