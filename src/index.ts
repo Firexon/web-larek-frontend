@@ -23,12 +23,11 @@ import { IItem, ISelectedItem, IServerOrder,  IOrderResponse } from './types';
 //  Создание API-клиента
 const api = new Api(API_URL);
 
-//  Событийный центр
 const events = new EventEmitter();
 
 //  Модели
 const catalogModel = new CatalogModel();
-const cartModel = new CartModel();
+const cartModel = new CartModel(events); 
 const formModel = new FormModel();
 
 //  Представления 
@@ -42,6 +41,9 @@ const cartItemTemplate = document.querySelector('#card-basket') as HTMLTemplateE
 const orderTemplate = document.querySelector('#order') as HTMLTemplateElement;
 const contactsTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
 const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
+
+const basketButton = document.querySelector('.header__basket');
+const cartCounter = document.querySelector('.header__basket-counter');
 
 const gallery = document.querySelector('.gallery')!;
 
@@ -103,6 +105,10 @@ events.on('cart:open', () => {
   modal.open();
 });
 
+basketButton.addEventListener('click', () => {
+  events.emit('cart:open');
+});
+
 //  Оформления заказа 
 events.on('order:open', () => {
   const orderView = new OrderView(orderTemplate);
@@ -127,6 +133,13 @@ events.on('order:open', () => {
 
   modal.setContent(orderView.getElement());
   modal.open();
+});
+
+// Слушатель на изменение корзины
+events.on('cart:changed', (event: { count: number }) => {
+  if (cartCounter) {
+    cartCounter.textContent = String(event.count);
+  }
 });
 
 //  Контакты
@@ -173,10 +186,10 @@ events.on('order:success', (res: IOrderResponse) => {
   const content = successView.render(res);
 
   successView.getButton().addEventListener('click', () => {
-    cartModel.clear();         // очищаем корзину
-    formModel.clear();         // очищаем форму
-    modal.close();             // закрываем модалку
-    renderCatalog();           // перерисовываем каталог
+    cartModel.clear();         
+    formModel.clear();         
+    modal.close();             
+    renderCatalog();           
   });
 
   modal.setContent(content);
@@ -192,6 +205,7 @@ api.get('/product')
     const typedData = data as ApiListResponse<IItem>;
     catalogModel.setItems(typedData.items);
     renderCatalog();
+    events.emit('cart:changed', { count: cartModel.getItems().length });
   })
   .catch((err) => {
     console.error('Ошибка загрузки товаров:', err);
