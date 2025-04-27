@@ -8,6 +8,7 @@ import { API_URL } from './utils/constants';
 import { CatalogModel } from './components/models/CatalogModel';
 import { CartModel } from './components/models/CartModel';
 import { FormModel } from './components/models/FormModel';
+import { OrderModel } from './components/models/Order';
 
 import { CardView } from './components/views/CardView';
 import { CardPreviewView } from './components/views/CardPreviewView';
@@ -29,6 +30,7 @@ const events = new EventEmitter();
 const catalogModel = new CatalogModel();
 const cartModel = new CartModel(events); 
 const formModel = new FormModel();
+const orderModel = new OrderModel();
 
 //  Представления 
 const modal = new ModalView(document.querySelector('#modal-container') as HTMLElement);
@@ -97,9 +99,12 @@ events.on('cart:open', () => {
 
   cartView.renderTotal(cartModel.getTotal());
 
-  cartView.getSubmitButton().addEventListener('click', () => {
-    events.emit('order:open');
-  });
+  const submitButton = cartView.getSubmitButton();
+  submitButton.disabled = cartModel.getItems().length === 0;
+
+  submitButton.addEventListener('click', () => {
+  events.emit('order:open');
+});
 
   modal.setContent(cartView.getElement());
   modal.open();
@@ -110,30 +115,39 @@ basketButton.addEventListener('click', () => {
 });
 
 //  Оформления заказа 
-events.on('order:open', () => {
-  const orderView = new OrderView(orderTemplate);
-  const form = orderView.getElement();
+// events.on('order:open', () => {
+//   const form = new OrderForm(orderTemplate);
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const address = formData.get('address')?.toString();
-    const payment = formData.get('card') ? 'card' : 'cash';
+//   const paymentButtons = form.getPaymentButtons();
+//   const addressInput = form.getAddressInput();
+//   const submitButton = form.getSubmitButton();
 
-    formModel.updateForm({ address, payment });
-    const errors = formModel.validateForm();
+//   // Обработка выбора способа оплаты
+//   paymentButtons.forEach((button: HTMLButtonElement) => {
+//     button.addEventListener('click', () => {
+//       paymentButtons.forEach((btn: HTMLButtonElement) => btn.classList.remove('button_alt-active'));
+//       button.classList.add('button_alt-active');
+  
+//       const payment = button.getAttribute('name');
+//       if (payment) {
+//         orderModel.setPayment(payment);
+//       }
+//     });
+//   });
 
-    const errorBlock = orderView.getErrorsContainer();
-    errorBlock.textContent = Object.values(errors).join(', ');
+//   // Обработка нажатия кнопки "Далее"
+//   submitButton.addEventListener('click', () => {
+//     const address = addressInput.value.trim();
+//     const payment = orderModel.getOrder().payment;
 
-    if (Object.keys(errors).length === 0) {
-      events.emit('contacts:open');
-    }
-  });
+//     if (address && payment) {
+//       orderModel.setAddress(address);
+//       events.emit('contacts:open');
+//     }
+//   });
 
-  modal.setContent(orderView.getElement());
-  modal.open();
-});
+//   modal.setContent(form.getElement());
+// });
 
 // Слушатель на изменение корзины
 events.on('cart:changed', (event: { count: number }) => {
