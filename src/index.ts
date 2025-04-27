@@ -32,7 +32,8 @@ const cartModel = new CartModel();
 const formModel = new FormModel();
 
 //  Представления 
-const modal = new ModalView(document.querySelector('#modal-container')!);
+const modal = new ModalView(document.querySelector('#modal-container') as HTMLElement);
+
 
 const cardTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 const previewTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
@@ -60,6 +61,7 @@ function renderCatalog() {
 
 //  Открытие превью
 events.on('preview:open', (item: IItem) => {
+  console.log('Событие preview:open вызвано для товара:', item);
   const view = new CardPreviewView(previewTemplate, {
     onClick: () => {
       const selected: ISelectedItem = {
