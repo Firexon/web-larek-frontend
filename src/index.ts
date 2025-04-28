@@ -18,6 +18,7 @@ import { ModalView } from './components/views/ModalView';
 import { OrderView } from './components/views/OrderView';
 import { ContactsView } from './components/views/ContactsView';
 import { SuccessView } from './components/views/SuccessView';
+import { OrderForm } from './components/views/OrderForm';
 
 import { IItem, ISelectedItem, IServerOrder,  IOrderResponse } from './types';
 
@@ -114,39 +115,62 @@ basketButton.addEventListener('click', () => {
   events.emit('cart:open');
 });
 
-//  Оформления заказа 
+//  Оформления заказа №2
+events.on('order:open', () => {
+  const formView = new OrderForm(orderTemplate);
+  formView.setNextButtonActive(false);
+
+  // При выборе способа оплаты
+  formView.listenPaymentChoice((method) => {
+    orderModel.setPayment(method);
+    formView.setActivePayment(method);
+    checkFormValidity();
+  });
+
+  // При вводе адреса
+  formView.listenAddressInput(() => {
+    orderModel.setAddress(formView.address);
+    checkFormValidity();
+  });
+
+  // Проверка валидности
+  function checkFormValidity() {
+    const valid = formView.paymentMethod && formView.address.trim() !== '';
+    formView.setNextButtonActive(valid);
+  }
+
+  formView.getElement().addEventListener('submit', (e) => {
+    e.preventDefault();
+    events.emit('contacts:open');
+  });
+
+  modal.setContent(formView.getElement());
+  modal.open();
+});
+//оформление заказа №1
 // events.on('order:open', () => {
-//   const form = new OrderForm(orderTemplate);
+//   const orderView = new OrderView(orderTemplate);
+//   const form = orderView.getElement();
 
-//   const paymentButtons = form.getPaymentButtons();
-//   const addressInput = form.getAddressInput();
-//   const submitButton = form.getSubmitButton();
+//   form.addEventListener('submit', (e) => {
+//     e.preventDefault();
+//     const formData = new FormData(form);
+//     const address = formData.get('address')?.toString();
+//     const payment = formData.get('card') ? 'card' : 'cash';
 
-//   // Обработка выбора способа оплаты
-//   paymentButtons.forEach((button: HTMLButtonElement) => {
-//     button.addEventListener('click', () => {
-//       paymentButtons.forEach((btn: HTMLButtonElement) => btn.classList.remove('button_alt-active'));
-//       button.classList.add('button_alt-active');
-  
-//       const payment = button.getAttribute('name');
-//       if (payment) {
-//         orderModel.setPayment(payment);
-//       }
-//     });
-//   });
+//     formModel.updateForm({ address, payment });
+//     const errors = formModel.validateForm();
 
-//   // Обработка нажатия кнопки "Далее"
-//   submitButton.addEventListener('click', () => {
-//     const address = addressInput.value.trim();
-//     const payment = orderModel.getOrder().payment;
+//     const errorBlock = orderView.getErrorsContainer();
+//     errorBlock.textContent = Object.values(errors).join(', ');
 
-//     if (address && payment) {
-//       orderModel.setAddress(address);
+//     if (Object.keys(errors).length === 0) {
 //       events.emit('contacts:open');
 //     }
 //   });
 
-//   modal.setContent(form.getElement());
+//   modal.setContent(orderView.getElement());
+//   modal.open();
 // });
 
 // Слушатель на изменение корзины
