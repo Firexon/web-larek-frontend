@@ -12,10 +12,14 @@ export class OrderModel {
     this._address = address;
   }
 
-  setItems(items: string[], prices: Record<string, number>) {
+  setItems(items: string[], total: number) {
     this._items = items;
-    this._total = items.reduce((sum, id) => sum + (prices[id] || 0), 0);
+    this._total = total;
   }
+
+  setTotal(total: number) {
+		this._total = total;
+	}
 
   getPayment(): string {
     return this._payment;

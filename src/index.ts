@@ -45,7 +45,7 @@ const cartTemplate = document.querySelector('#basket') as HTMLTemplateElement;
 const cartItemTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
 const orderTemplate = document.querySelector('#order') as HTMLTemplateElement;
 const contactsTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
-const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
+// const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
 
 const basketButton = document.querySelector('.header__basket');
 const cartCounter = document.querySelector('.header__basket-counter');
@@ -141,6 +141,13 @@ events.on('order:open', () => {
     formView.setNextButtonActive(valid);
   }
 
+  const selectedItems = cartModel.getItems();
+  const itemIds = selectedItems.map(item => item.id);
+  const total = cartModel.getTotal();
+  
+  orderModel.setItems(itemIds, total);
+
+
   formView.getElement().addEventListener('submit', (e) => {
     e.preventDefault();
     events.emit('contacts:open');
@@ -157,51 +164,59 @@ events.on('cart:changed', (event: { count: number }) => {
   }
 });
 
-//  Контакты
+// Обработка открытия формы контактов
 events.on('contacts:open', () => {
-	const contactsForm = new ContactsForm(contactsTemplate);
-	modal.setContent(contactsForm.render());
-	modal.open();
+  const contactsForm = new ContactsForm(contactsTemplate);
+  modal.setContent(contactsForm.render());
+  modal.open();
 
-	// Обработка ввода
-	contactsForm.onInputChange(() => {
-		const isValid = contactsForm.isValid();
-		contactsForm.setSubmitButtonState(isValid);
-	});
+  // Обработка ввода
+  contactsForm.onInputChange(() => {
+    const isValid = contactsForm.isValid();
+    contactsForm.setSubmitButtonState(isValid);
+  });
 
-	// Отправка формы
-	contactsForm.onSubmit((data: IContactsForm) => {
-		const orderData = {
-			payment: orderModel.getPayment(),
-			address: orderModel.getAddress(),
-			email: data.email,
-			phone: data.phone,
-			total: orderModel.getTotal(),
-			items: orderModel.getOrderItems(),
-		};contactsTemplate 
+  // Отправка формы
+  contactsForm.onSubmit((data: IContactsForm) => {
+    const orderData = {
+      ...data,
+      address: orderModel.getAddress(),
+      payment: orderModel.getPayment(),
+      items: orderModel.getOrderItems(),
+      total: orderModel.getTotal()
+    };
 
-		api.post('/order', orderData).then(() => {
-			orderModel.clear(); // обнуление корзины и данных
-			modal.setContent(successTemplate);
-      modal.open();
-		});
-	});
+    api.post('/order', orderData)
+      .then((response: IOrderResponse) => {
+        events.emit('order:success', response);
+      })
+      .catch((err) => {
+        console.error('Ошибка отправки заказа:', err);
+      });
+  });
 });
 
-//  Успешный заказ
+// Обработка успешного оформления заказа
 events.on('order:success', (res: IOrderResponse) => {
+  const successTemplate = document.getElementById('success') as HTMLTemplateElement;
   const successView = new SuccessView(successTemplate);
   const content = successView.render(res);
 
   successView.getButton().addEventListener('click', () => {
-    cartModel.clear();         
-    formModel.clear();         
-    modal.close();             
-    renderCatalog();           
+    cartModel.clear();
+    orderModel.clear();
+    modal.close();
+    renderCatalog();
   });
 
   modal.setContent(content);
   modal.open();
+
+  modal.setCloseHandler(() => {
+    cartModel.clear();
+    orderModel.clear();
+    renderCatalog(); 
+  });
 });
 
 //  Закрытие по крестику и оверлею
