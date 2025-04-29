@@ -1,30 +1,42 @@
-import { IOrderForm } from '../../types';
-
 export class OrderModel {
-  private address: string = '';
-  private payment: string = '';
-  private email: string = '';
-  private phone: string = '';
+  private _payment: string = '';
+  private _address: string = '';
+  private _items: string[] = [];
+  private _total: number = 0;
 
-  setPayment(payment: string) {
-    this.payment = payment;
+  setPayment(method: string) {
+    this._payment = method;
   }
 
   setAddress(address: string) {
-    this.address = address;
+    this._address = address;
   }
 
-  setContacts(email: string, phone: string) {
-    this.email = email;
-    this.phone = phone;
+  setItems(items: string[], prices: Record<string, number>) {
+    this._items = items;
+    this._total = items.reduce((sum, id) => sum + (prices[id] || 0), 0);
   }
 
-  getOrder(): IOrderForm {
-    return {
-      address: this.address,
-      payment: this.payment,
-      email: this.email,
-      phone: this.phone,
-    };
+  getPayment(): string {
+    return this._payment;
+  }
+
+  getAddress() {
+    return this._address;
+  }
+
+  getOrderItems() {
+    return this._items;
+  }
+
+  getTotal(): number {
+    return this._total;
+  }
+
+  clear() {
+    this._payment = '';
+    this._address = '';
+    this._items = [];
+    this._total = 0;
   }
 }

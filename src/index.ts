@@ -2,6 +2,7 @@ import './scss/styles.scss';
 
 import { Api, ApiListResponse } from './components/base/api';
 import { EventEmitter } from './components/base/events';
+import { events } from './components/base/events';
 
 import { API_URL } from './utils/constants';
 
@@ -19,13 +20,14 @@ import { OrderView } from './components/views/OrderView';
 import { ContactsView } from './components/views/ContactsView';
 import { SuccessView } from './components/views/SuccessView';
 import { OrderForm } from './components/views/OrderForm';
+import { ContactsForm } from './components/views/ContactsForm';
 
-import { IItem, ISelectedItem, IServerOrder,  IOrderResponse } from './types';
+import { IItem, ISelectedItem, IServerOrder,  IOrderResponse, IContactsForm } from './types';
 
 //  Создание API-клиента
 const api = new Api(API_URL);
 
-const events = new EventEmitter();
+// const events = new EventEmitter();
 
 //  Модели
 const catalogModel = new CatalogModel();
@@ -115,7 +117,7 @@ basketButton.addEventListener('click', () => {
   events.emit('cart:open');
 });
 
-//  Оформления заказа №2
+//  Оформления заказа 
 events.on('order:open', () => {
   const formView = new OrderForm(orderTemplate);
   formView.setNextButtonActive(false);
@@ -147,31 +149,6 @@ events.on('order:open', () => {
   modal.setContent(formView.getElement());
   modal.open();
 });
-//оформление заказа №1
-// events.on('order:open', () => {
-//   const orderView = new OrderView(orderTemplate);
-//   const form = orderView.getElement();
-
-//   form.addEventListener('submit', (e) => {
-//     e.preventDefault();
-//     const formData = new FormData(form);
-//     const address = formData.get('address')?.toString();
-//     const payment = formData.get('card') ? 'card' : 'cash';
-
-//     formModel.updateForm({ address, payment });
-//     const errors = formModel.validateForm();
-
-//     const errorBlock = orderView.getErrorsContainer();
-//     errorBlock.textContent = Object.values(errors).join(', ');
-
-//     if (Object.keys(errors).length === 0) {
-//       events.emit('contacts:open');
-//     }
-//   });
-
-//   modal.setContent(orderView.getElement());
-//   modal.open();
-// });
 
 // Слушатель на изменение корзины
 events.on('cart:changed', (event: { count: number }) => {
@@ -182,40 +159,33 @@ events.on('cart:changed', (event: { count: number }) => {
 
 //  Контакты
 events.on('contacts:open', () => {
-  const contactsView = new ContactsView(contactsTemplate);
-  const form = contactsView.getElement();
+	const contactsForm = new ContactsForm(contactsTemplate);
+	modal.setContent(contactsForm.render());
+	modal.open();
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const email = formData.get('email')?.toString();
-    const phone = formData.get('phone')?.toString();
+	// Обработка ввода
+	contactsForm.onInputChange(() => {
+		const isValid = contactsForm.isValid();
+		contactsForm.setSubmitButtonState(isValid);
+	});
 
-    formModel.updateForm({ email, phone });
-    const errors = formModel.validateForm();
+	// Отправка формы
+	contactsForm.onSubmit((data: IContactsForm) => {
+		const orderData = {
+			payment: orderModel.getPayment(),
+			address: orderModel.getAddress(),
+			email: data.email,
+			phone: data.phone,
+			total: orderModel.getTotal(),
+			items: orderModel.getOrderItems(),
+		};contactsTemplate 
 
-    const errorBlock = contactsView.getErrorsContainer();
-    errorBlock.textContent = Object.values(errors).join(', ');
-
-    if (Object.keys(errors).length === 0) {
-      const order = formModel.getOrder(
-        cartModel.getItems().map((item) => item.id),
-        cartModel.getTotal()
-      );
-      api
-        .post('/order', order)
-        .then((res: IServerOrder) => {
-          events.emit('order:success', res);
-        })
-        .catch((err) => {
-          errorBlock.textContent = 'Ошибка оформления заказа';
-          console.error(err);
-        });
-    }
-  });
-
-  modal.setContent(contactsView.getElement());
-  modal.open();
+		api.post('/order', orderData).then(() => {
+			orderModel.clear(); // обнуление корзины и данных
+			modal.setContent(successTemplate);
+      modal.open();
+		});
+	});
 });
 
 //  Успешный заказ

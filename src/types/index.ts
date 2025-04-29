@@ -23,7 +23,7 @@ export interface IOrderForm {
 	phone?: string;
 }
 
-export interface IOrderContacts {
+export interface IContactsForm {
 	email: string;
 	phone: string;
 }
