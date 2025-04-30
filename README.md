@@ -49,122 +49,131 @@ yarn build
 
 Дополнительно используются брокер событий (EventEmitter) и API-клиент (Api).
 ...
+ 
+Архитектура проекта
+Описание компонентов
 
-### EventEmitter
+## base
+## api.ts
+Задача: Обёртка над API для выполнения HTTP-запросов.
 
-Класс `EventEmitter` реализует паттерн "Наблюдатель" (Observer) и служит брокером событий. Он реализует интерфейс `IEvents`.
+Атрибуты: baseUrl, headers.
 
-Методы:
-- `on(event, callback)` — подписка на событие.
-- `off(event, callback)` — отписка.
-- `emit(event, data?)` — вызов всех подписчиков.
-- `onAll(callback)` — подписка на все события.
-- `offAll()` — сброс всех подписчиков.
-- `trigger(eventName, context?)` — возвращает функцию-генератор события.
+Методы: get(), post(), put(), delete() — запросы к серверу.
 
-Интерфейс `IEvents` и связанные типы определены внутри `events.ts`.
+## events.ts
+Задача: Реализация шаблона событийной подписки.
 
-...
+Атрибуты: _listeners: Record<string, Function[]>
 
-## Модель (Model)
-## Api
-Задача: Базовый API-клиент. Используется для работы с сервером.
+Методы: on(), emit(), off() — управление событиями.
 
-Атрибуты:
-`baseUrl: string` — базовый адрес API
-`options: RequestInit` — заголовки и конфигурация
+## models
+## CartModel.ts
+Задача: Хранение и управление данными корзины.
 
-Методы:
-`get(uri: string): Promise<any>` — запрос на получение данных
-`post(uri: string, data: object, method?: string): Promise<any>` — отправка данных
-`handleResponse(response: Response): Promise<object>` — обработка ответа
+Атрибуты: items, total.
 
-## ProductModel
-Задача: Хранит и предоставляет список товаров, а также текущий выбранный элемент (например, при открытии окна "Подробнее").
+Методы: addItem(), removeItem(), clear().
 
-Атрибуты:
-`items: IItem[]` — список всех товаров.
-`selectedItem: IItem | null` — текущий выбранный товар.
+## CatalogModel.ts
+Задача: Управление списком товаров каталога.
 
-Методы:
-`setItems(items: IItem[])` — загрузить список товаров.
-`getItemById(id: string): IItem | undefined` — получить товар по ID.
-`selectItem(item: IItem)` — установить выбранный товар.
-`getSelectedItem(): IItem | null` — получить текущий выбранный товар.
+Атрибуты: items: IProduct[].
 
-## CartModel
-Задача: Управляет товарами в корзине.
+Методы: setItems(), getItemById().
 
-Атрибуты:
-`items: ISelectedItem[]` — выбранные товары
+## FormModel.ts
+Задача: Управление данными формы заказа.
 
-Методы:
-`addItem(item: ISelectedItem)` — добавить товар
-`removeItem(id: string)` — удалить товар
-`clear()` — очистить корзину
-`getTotal(): number` — получить общую сумму
+Атрибуты: name, email, phone.
 
-## FormModel
-Задача:
-Хранит форму заказа и выполняет её валидацию.
+Методы: updateField(), validate().
 
-Атрибуты:
-`form: IOrderForm` — данные формы
+## Order.ts
+Задача: Представление модели заказа.
 
-Методы:
-`updateForm(data: Partial<IOrderForm>)` — обновить данные формы
-`validateForm(): FormErrors` — вернуть ошибки
-`getOrder(items: string[], total: number): IServerOrder` — сформировать заказ
+Атрибуты: orderItems, total, contacts.
 
-...
+Методы: submit(), setField().
 
-## ПРЕДСТАВЛЕНИЯ (View)
-## CardView
-Задача: Отображает карточку товара.
+## ProductModel.ts
+Задача: Представление товара.
 
-Атрибуты:
-`element: HTMLElement` — DOM-элемент карточки
-`data: IItem` — данные товара
+Атрибуты: id, title, price, description.
 
-Методы:
-`render(data: IItem)` — отрисовка
-`setPrice(price: number)` — установка цены
-`setCategory(category: string)` — установка категории
+Методы: toggleFavorite().
 
-## CardPreviewView
-Задача: Показывает подробности товара с кнопкой "Купить".
+## views
+## CardPreviewView.ts
+Задача: Отображение подробной информации о товаре.
 
-Методы:
-`renderFull()` — отрисовка полной карточки
-`disableIfNoPrice()` — скрыть кнопку при отсутствии цены
+Атрибуты: template, actions.
 
-## CartView
-Задача: Отображает корзину с товарами и суммой.
+Методы: render(item: IProduct).
 
-Методы:
-`renderList(items: ISelectedItem[])`
-`renderTotal(sum: number)`
+## CardView.ts
+Задача: Карточка товара в списке.
 
-## OrderView и ContactsView
-Задача: Формы для ввода адреса и контактов.
+Атрибуты: template, actions.
 
-Методы:
-`render(), update()`
+Методы: render(item: IProduct).
 
-## ModalView
-Задача: Модальное окно.
+## CartItemView.ts
+Задача: Отображение одного товара в корзине.
 
-Методы:
-`open(content: HTMLElement)`
-`close`
+Атрибуты: template, actions.
 
-## SuccessView
-Задача: Экран успешного оформления заказа.
+Методы: render(item: ICartItem).
 
-Методы:
-`render(orderId: string, total: number)`
+## ContactsForm.ts
+Задача: Форма ввода контактных данных.
 
-...
+Атрибуты: form, fields.
+
+Методы: getData(), setData().
+
+## ContactsView.ts
+Задача: Визуализация контактных данных.
+
+Атрибуты: container, data.
+
+Методы: render().
+
+## ModalView.ts
+Задача: Управление модальными окнами.
+
+Атрибуты: container, overlay, closeBtn.
+
+Методы: open(), close(), render().
+
+## OrderForm.ts
+Задача: Форма оформления заказа.
+
+Атрибуты: form, fields.
+
+Методы: getData(), validate().
+
+## OrderView.ts
+Задача: Отображение финальной информации о заказе.
+
+Атрибуты: container, summary.
+
+Методы: render(order).
+
+## SuccessView.ts
+Задача: Отображение сообщения об успешном заказе.
+
+Атрибуты: template.
+
+Методы: render().
+
+## View.ts
+Задача: Базовый абстрактный класс для всех View.
+
+Атрибуты: template, container.
+
+Методы: render(), clear(), append().
 
 ## ПРЕЗЕНТЕРЫ (Presenter)
 Презентер реализован как набор пользовательских событий

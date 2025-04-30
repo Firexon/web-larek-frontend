@@ -1,14 +1,13 @@
 import './scss/styles.scss';
 
 import { Api, ApiListResponse } from './components/base/api';
-import { EventEmitter } from './components/base/events';
 import { events } from './components/base/events';
 
 import { API_URL } from './utils/constants';
 
 import { CatalogModel } from './components/models/CatalogModel';
 import { CartModel } from './components/models/CartModel';
-import { FormModel } from './components/models/FormModel';
+// import { FormModel } from './components/models/FormModel';
 import { OrderModel } from './components/models/Order';
 
 import { CardView } from './components/views/CardView';
@@ -16,28 +15,23 @@ import { CardPreviewView } from './components/views/CardPreviewView';
 import { CartView } from './components/views/CartView';
 import { CartItemView } from './components/views/CartItemView';
 import { ModalView } from './components/views/ModalView';
-import { OrderView } from './components/views/OrderView';
-import { ContactsView } from './components/views/ContactsView';
 import { SuccessView } from './components/views/SuccessView';
 import { OrderForm } from './components/views/OrderForm';
 import { ContactsForm } from './components/views/ContactsForm';
 
-import { IItem, ISelectedItem, IServerOrder,  IOrderResponse, IContactsForm } from './types';
+import { IItem, ISelectedItem,  IOrderResponse, IContactsForm } from './types';
 
 //  Создание API-клиента
 const api = new Api(API_URL);
 
-// const events = new EventEmitter();
-
 //  Модели
 const catalogModel = new CatalogModel();
 const cartModel = new CartModel(events); 
-const formModel = new FormModel();
+// const formModel = new FormModel();
 const orderModel = new OrderModel();
 
 //  Представления 
 const modal = new ModalView(document.querySelector('#modal-container') as HTMLElement);
-
 
 const cardTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 const previewTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
@@ -45,7 +39,6 @@ const cartTemplate = document.querySelector('#basket') as HTMLTemplateElement;
 const cartItemTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
 const orderTemplate = document.querySelector('#order') as HTMLTemplateElement;
 const contactsTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
-// const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
 
 const basketButton = document.querySelector('.header__basket');
 const cartCounter = document.querySelector('.header__basket-counter');
@@ -122,14 +115,14 @@ events.on('order:open', () => {
   const formView = new OrderForm(orderTemplate);
   formView.setNextButtonActive(false);
 
-  // При выборе способа оплаты
+  // Выбор способа оплаты
   formView.listenPaymentChoice((method) => {
     orderModel.setPayment(method);
     formView.setActivePayment(method);
     checkFormValidity();
   });
 
-  // При вводе адреса
+  // Вводе адреса
   formView.listenAddressInput(() => {
     orderModel.setAddress(formView.address);
     checkFormValidity();
@@ -164,7 +157,7 @@ events.on('cart:changed', (event: { count: number }) => {
   }
 });
 
-// Обработка открытия формы контактов
+// Модальное с контактами
 events.on('contacts:open', () => {
   const contactsForm = new ContactsForm(contactsTemplate);
   modal.setContent(contactsForm.render());
@@ -196,7 +189,7 @@ events.on('contacts:open', () => {
   });
 });
 
-// Обработка успешного оформления заказа
+// успешный заказ
 events.on('order:success', (res: IOrderResponse) => {
   const successTemplate = document.getElementById('success') as HTMLTemplateElement;
   const successView = new SuccessView(successTemplate);
