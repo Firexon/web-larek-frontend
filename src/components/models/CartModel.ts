@@ -31,5 +31,9 @@ export class CartModel {
   getTotal() {
     return this.items.reduce((total, item) => total + item.price, 0);
   }
+
+  hasItem(id: string): boolean {
+    return this.items.some(item => item.id === id);
+  }
 }
 

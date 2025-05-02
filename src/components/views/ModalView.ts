@@ -1,8 +1,15 @@
+import { events } from '../base/events';
+
 export class ModalView {
   protected container: HTMLElement;
+  protected closeButton: HTMLElement | null;
+  protected overlay: HTMLElement;
 
   constructor(container: HTMLElement) {
     this.container = container;
+    this.closeButton = container.querySelector('.modal__close');
+    this.overlay = container;
+    this._setupEvents();
   }
 
   setContent(content: HTMLElement | null) {
@@ -19,10 +26,14 @@ export class ModalView {
     this.container.classList.remove('modal_active');
   }
 
-  setCloseHandler(callback: () => void) {
-    this.container.querySelector('.modal__close')?.addEventListener('click', callback);
-    this.container.addEventListener('click', (e) => {
-      if (e.target === this.container) callback();
+  private _setupEvents() {
+    this.closeButton?.addEventListener('click', () => events.emit('modal:close'));
+    this.overlay.addEventListener('click', (e) => {
+      if (e.target === this.overlay) events.emit('modal:close');
+    });
+  
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') events.emit('modal:close');
     });
   }
 }

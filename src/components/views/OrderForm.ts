@@ -1,4 +1,5 @@
 import { View } from './View';
+import { events } from '../base/events';
 
 export class OrderForm extends View<HTMLFormElement> {
   protected _address: HTMLInputElement;
@@ -10,6 +11,14 @@ export class OrderForm extends View<HTMLFormElement> {
     this._address = this.getElement().querySelector('input[name="address"]');
     this._buttons = Array.from(this.getElement().querySelectorAll('.button_alt'));
     this._submitButton = this.getElement().querySelector('button[type="submit"]');
+
+    this._listenAddressInput();
+    this._listenPaymentChoice();
+
+    this.getElement().addEventListener('submit', (e) => {
+      e.preventDefault();
+      events.emit('contacts:open');
+    });
   }
 
   set address(value: string) {
@@ -31,17 +40,24 @@ export class OrderForm extends View<HTMLFormElement> {
     });
   }
 
-  listenPaymentChoice(callback: (method: string) => void) {
+  reset() {
+    this.address = '';
+    this.setActivePayment('');
+    this.setNextButtonActive(false);
+  }
+
+  private _listenPaymentChoice() {
     this._buttons.forEach((button) => {
       button.addEventListener('click', () => {
-        callback(button.name);
+        this.setActivePayment(button.name);
+        events.emit('order:change', { key: 'payment', value: button.name });
       });
     });
   }
 
-  listenAddressInput(callback: () => void) {
+  private _listenAddressInput() {
     this._address.addEventListener('input', () => {
-      callback();
+      events.emit('order:change', { key: 'address', value: this._address.value });
     });
   }
 
@@ -53,3 +69,4 @@ export class OrderForm extends View<HTMLFormElement> {
     }
   }
 }
+

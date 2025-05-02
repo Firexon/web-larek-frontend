@@ -1,13 +1,20 @@
 export class CartView {
   protected element: HTMLElement;
 
-  constructor(template: HTMLTemplateElement) {
+  constructor(template: HTMLTemplateElement, onSubmit: () => void) {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
   }
 
-  renderTotal(total: number) {
-    const totalNode = this.element.querySelector('.basket__price');
-    if (totalNode) totalNode.textContent = `${total} синапсов`;
+  setSubmitButtonState(enabled: boolean) {
+    const submitButton = this.element.querySelector('.basket__button') as HTMLButtonElement;
+    submitButton.disabled = !enabled;
+  }
+
+  setTotal(total: number) {
+    const totalEl = this.element.querySelector('.cart__price');
+    if (totalEl) {
+      totalEl.textContent = `${total} синапсов`;
+    }
   }
 
   getElement(): HTMLElement {
@@ -22,4 +29,3 @@ export class CartView {
     return this.element.querySelector('.basket__button')!;
   }
 }
-

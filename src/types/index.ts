@@ -4,7 +4,7 @@ export interface IItem {
 	title: string;
 	description: string;
 	image: string;
-	category: string;
+	category: 'soft' | 'hard' | 'other' | 'additional' | 'button';
 	price: number | null;
 }
 
