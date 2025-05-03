@@ -4,20 +4,24 @@ export class PageView {
   protected gallery: HTMLElement;
 
   constructor() {
-    this.basketButton = document.querySelector('.header__basket') as HTMLElement;
-    this.cartCounter = document.querySelector('.header__basket-counter') as HTMLElement;
-    this.gallery = document.querySelector('.gallery') as HTMLElement;
+    this.basketButton = document.querySelector('.header__basket')!;
+    this.cartCounter = document.querySelector('.header__basket-counter')!;
+    this.gallery = document.querySelector('.gallery')!;
   }
 
-  onBasketClick(handler: () => void) {
-    this.basketButton.addEventListener('click', handler);
+  public render(): void {
+    // Ничего не подготавливаем — всё уже есть в DOM
   }
 
-  setCartCount(count: number) {
+  public getElement(): HTMLElement {
+    return this.gallery;
+  }
+
+  public setCartCount(count: number): void {
     this.cartCounter.textContent = String(count);
   }
 
-  getGallery(): HTMLElement {
-    return this.gallery;
+  public onBasketClick(handler: () => void): void {
+    this.basketButton.addEventListener('click', handler);
   }
 }

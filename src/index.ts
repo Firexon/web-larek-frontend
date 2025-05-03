@@ -52,17 +52,31 @@ const cartItemView = new CartItemView(cartItemTemplate, {
   }
 });
 
-const cartView = new CartView(cartTemplate, () => {
-  events.emit('order:open');
-}, cartItemView);
+const cartView = new CartView(
+  cartTemplate,
+  () => events.emit('order:open'),
+  cartItemTemplate,            // <-- это HTMLTemplateElement для CartItem
+  {
+    onClick: (event) => {
+      const target = event.target as HTMLElement;
+      const id = target.dataset.id;
+      if (id) {
+        cartModel.removeItem(id);
+        events.emit('basket:change');
+      }
+    }
+  }
+);
 const orderFormView = new OrderForm(orderTemplate);
 const contactsFormView = new ContactsForm(contactsTemplate);
 const successView = new SuccessView(document.getElementById('success') as HTMLTemplateElement);
 
 //  Отрисовка товаров
 function renderCatalog() {
-  const gallery = pageView.getGallery();
+  pageView.render(); 
+  const gallery = pageView.getElement();
   gallery.innerHTML = '';
+
   catalogModel.getItems().forEach((item) => {
     const card = new CardView(cardTemplate, {
       onClick: () => {
@@ -98,7 +112,9 @@ events.on('preview:open', (item: IItem) => {
     }
   });
 
-  modal.setContent(view.render(item, inCart));  
+  view.setData(item, inCart);
+  view.render();
+  modal.setContent(view.getElement());
   modal.open();
 });
 
@@ -188,7 +204,8 @@ events.on('order:open', () => {
 });
 
 events.on('contacts:open', () => {
-  modal.setContent(contactsFormView.render());
+  contactsFormView.render(); // готовим форму
+  modal.setContent(contactsFormView.getElement()); // вставляем весь блок
   modal.open();
 });
 
@@ -221,8 +238,8 @@ events.on('order:submit', () => {
 
 // успешный заказ
 events.on('order:success', (res: IOrderResponse) => {
-  const successElement = successView.render(res);
-  modal.setContent(successElement);
+  successView.render(res); // просто подготавливает содержимое
+  modal.setContent(successView.getElement()); 
   modal.open();
 
   cartModel.clear();

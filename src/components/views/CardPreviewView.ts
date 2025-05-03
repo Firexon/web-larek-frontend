@@ -5,6 +5,9 @@ export class CardPreviewView {
   protected element: HTMLElement;
   protected button: HTMLButtonElement;
 
+  protected data: IItem | null = null;
+  protected inCart: boolean = false;
+
   constructor(template: HTMLTemplateElement, handlers: IClickHandler) {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
     this.button = this.element.querySelector('.card__button') as HTMLButtonElement;
@@ -15,19 +18,26 @@ export class CardPreviewView {
     });
   }
 
-  render(data: IItem, inCart: boolean = false): HTMLElement {
+  public setData(data: IItem, inCart: boolean = false): void {
+    this.data = data;
+    this.inCart = inCart;
+  }
+
+  public render(): void {
+    if (!this.data) return;
+
     const title = this.element.querySelector('.card__title')!;
     const text = this.element.querySelector('.card__text')!;
     const price = this.element.querySelector('.card__price')!;
     const image = this.element.querySelector('.card__image') as HTMLImageElement;
     const category = this.element.querySelector('.card__category')!;
 
-    title.textContent = data.title;
-    text.textContent = data.description;
-    price.textContent = `${data.price ?? 0} синапсов`;
-    image.src = `${CDN_URL}${data.image}`;
-    image.alt = data.title;
-    category.textContent = data.category;
+    title.textContent = this.data.title;
+    text.textContent = this.data.description;
+    price.textContent = `${this.data.price ?? 0} синапсов`;
+    image.src = `${CDN_URL}${this.data.image}`;
+    image.alt = this.data.title;
+    category.textContent = this.data.category;
 
     const colorMap: Record<string, string> = {
       'софт-скил': 'soft',
@@ -37,20 +47,22 @@ export class CardPreviewView {
       'дополнительно': 'additional',
       'кнопка': 'button',
     };
-    category.className = 'card__category'; 
-    const classSuffix = colorMap[data.category];
+
+    category.className = 'card__category';
+    const classSuffix = colorMap[this.data.category];
     if (classSuffix) {
       category.classList.add(`card__category_${classSuffix}`);
     }
 
-    const isSellable = data.price !== null && data.price > 0;
+    const isSellable = this.data.price !== null && this.data.price > 0;
     this.button.disabled = !isSellable;
     this.button.textContent = isSellable
-      ? (inCart ? 'Удалить из корзины' : 'В корзину')
+      ? (this.inCart ? 'Удалить из корзины' : 'В корзину')
       : 'Не продается';
+  }
 
+  public getElement(): HTMLElement {
     return this.element;
   }
 }
-
 

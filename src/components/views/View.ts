@@ -7,10 +7,12 @@ export class View<T extends HTMLElement = HTMLElement> {
     this.element = template.content.firstElementChild!.cloneNode(true) as T;
   }
 
-  render(data?: unknown): HTMLElement {
-    return this.element;
+  // Подготовка содержимого (опционально реализуется в наследниках)
+  render(data?: unknown): void {
+    // По умолчанию ничего не делает
   }
 
+  // Отдаем полностью готовый DOM-элемент
   getElement(): T {
     return this.element;
   }

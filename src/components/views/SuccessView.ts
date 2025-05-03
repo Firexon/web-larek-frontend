@@ -8,14 +8,12 @@ export class SuccessView {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
   }
 
-  render(order: IOrderResponse): HTMLElement {
+  render(order: IOrderResponse): void {
     this.element.querySelector('.order-success__description')!.textContent = `Списано ${order.total} синапсов`;
-
+  
     const button = this.element.querySelector('.order-success__close')!;
-    button.removeEventListener('click', this._handleClick); 
+    button.removeEventListener('click', this._handleClick);
     button.addEventListener('click', this._handleClick);
-
-    return this.element;
   }
 
   private _handleClick = () => {
