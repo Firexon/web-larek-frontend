@@ -39,9 +39,22 @@ const catalogModel = new CatalogModel();
 const cartModel = new CartModel(events); 
 const orderModel = new OrderModel();
 const pageView = new PageView();
+const cartItemView = new CartItemView(cartItemTemplate, {
+  onClick: (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    const id = target.closest('[data-id]')?.getAttribute('data-id'); 
+
+    if (id) {
+      cartModel.removeItem(id);
+      events.emit('basket:change');
+      events.emit('cart:changed', { count: cartModel.getItems().length });
+    }
+  }
+});
+
 const cartView = new CartView(cartTemplate, () => {
   events.emit('order:open');
-});
+}, cartItemView);
 const orderFormView = new OrderForm(orderTemplate);
 const contactsFormView = new ContactsForm(contactsTemplate);
 const successView = new SuccessView(document.getElementById('success') as HTMLTemplateElement);
@@ -90,48 +103,65 @@ events.on('preview:open', (item: IItem) => {
 });
 
 events.on('basket:change', () => {
-  const list = cartView.getListContainer();
-  list.innerHTML = '';
-  cartModel.getItems().forEach((item, index) => {
-    const cartItem = new CartItemView(cartItemTemplate, {
-      onClick: () => {
-        cartModel.removeItem(item.id);
-        events.emit('basket:change'); 
-        events.emit('cart:changed', { count: cartModel.getItems().length }); 
-      },
-    });
-    list.appendChild(cartItem.render(item, index));
-  });
+  const items = cartModel.getItems();
+  const total = cartModel.getTotal();
 
-  cartView.setTotal(cartModel.getTotal());
-  cartView.setSubmitButtonState(cartModel.getItems().length > 0);
+  cartView.render({ items, total });
+  events.emit('cart:changed', { count: items.length });
 });
 
+// events.on('basket:change', () => {
+//   const list = cartView.getListContainer();
+//   list.innerHTML = '';
+//   cartModel.getItems().forEach((item, index) => {
+//     const cartItem = new CartItemView(cartItemTemplate, {
+//       onClick: () => {
+//         cartModel.removeItem(item.id);
+//         events.emit('basket:change'); 
+//         events.emit('cart:changed', { count: cartModel.getItems().length }); 
+//       },
+//     });
+//     list.appendChild(cartItem.render(item, index));
+//   });
+
+//   cartView.setTotal(cartModel.getTotal());
+//   cartView.setSubmitButtonState(cartModel.getItems().length > 0);
+// });
+
 events.on('cart:open', () => {
-  const list = cartView.getListContainer();
-  list.innerHTML = '';
-  cartModel.getItems().forEach((item, index) => {
-    const cartItem = new CartItemView(cartItemTemplate, {
-      onClick: () => {
-        cartModel.removeItem(item.id);
-        events.emit('basket:change'); 
-      },
-    });
-    list.appendChild(cartItem.render(item, index));
-  });
+  const items = cartModel.getItems();
+  const total = cartModel.getTotal();
 
-  cartView.setTotal(cartModel.getTotal());
-
-  const submitButton = cartView.getSubmitButton();
-  submitButton.disabled = cartModel.getItems().length === 0;
-
-  submitButton.addEventListener('click', () => {
-    events.emit('order:open');
-  });
-
+  cartView.render({ items, total });
   modal.setContent(cartView.getElement());
   modal.open();
 });
+
+// events.on('cart:open', () => {
+//   const list = cartView.getListContainer();
+//   list.innerHTML = '';
+//   cartModel.getItems().forEach((item, index) => {
+//     const cartItem = new CartItemView(cartItemTemplate, {
+//       onClick: () => {
+//         cartModel.removeItem(item.id);
+//         events.emit('basket:change'); 
+//       },
+//     });
+//     list.appendChild(cartItem.render(item, index));
+//   });
+
+//   cartView.setTotal(cartModel.getTotal());
+
+//   const submitButton = cartView.getSubmitButton();
+//   submitButton.disabled = cartModel.getItems().length === 0;
+
+//   submitButton.addEventListener('click', () => {
+//     events.emit('order:open');
+//   });
+
+//   modal.setContent(cartView.getElement());
+//   modal.open();
+// });
 
 // Слушатель кнопки корзины
 pageView.onBasketClick(() => {
@@ -141,6 +171,10 @@ pageView.onBasketClick(() => {
 // Слушатель на изменение корзины
 events.on('cart:changed', (event: { count: number }) => {
   pageView.setCartCount(event.count);
+
+  const items = cartModel.getItems();
+  const total = cartModel.getTotal();
+  cartView.render({ items, total });
 });
 
 
