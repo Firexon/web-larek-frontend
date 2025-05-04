@@ -12,6 +12,13 @@ export class ModalView {
     this._setupEvents();
   }
 
+  private handleEscClose = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      this.close();
+      events.emit('modal:close');
+    }
+  }
+
   setContent(content: HTMLElement | null) {
     const target = this.container.querySelector('.modal__content')!;
     target.innerHTML = '';
@@ -20,21 +27,21 @@ export class ModalView {
 
   open() {
     this.container.classList.add('modal_active');
+    document.addEventListener('keydown', this.handleEscClose);
   }
 
   close() {
     this.container.classList.remove('modal_active');
+    document.removeEventListener('keydown', this.handleEscClose);
   }
 
   private _setupEvents() {
     this.closeButton?.addEventListener('click', () => events.emit('modal:close'));
+
     this.overlay.addEventListener('click', (e) => {
-      if (e.target === this.overlay) events.emit('modal:close');
-    });
-  
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') events.emit('modal:close');
+      if (e.target === this.overlay) {
+        events.emit('modal:close');
+      }
     });
   }
 }
-

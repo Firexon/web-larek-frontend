@@ -10,7 +10,6 @@ export class PageView {
   }
 
   public render(): void {
-    // Ничего не подготавливаем — всё уже есть в DOM
   }
 
   public getElement(): HTMLElement {

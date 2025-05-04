@@ -1,4 +1,5 @@
 import { IItem } from '../../types';
+import { events } from '../base/events'; 
 
 export class CatalogModel {
   protected items: IItem[] = [];
@@ -6,6 +7,7 @@ export class CatalogModel {
 
   setItems(items: IItem[]) {
     this.items = items;
+    events.emit('products:loaded'); 
   }
 
   getItems(): IItem[] {

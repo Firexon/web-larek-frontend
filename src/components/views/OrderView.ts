@@ -9,22 +9,19 @@ export class OrderView {
     this.errorsContainer = this.element.querySelector('.form__errors')!;
   }
 
-  // Метод для отображения ошибок
-  setErrors(errors: string[]) {
-    this.errorsContainer.innerHTML = '';
-    errors.forEach((err) => {
-      const errorEl = document.createElement('div');
-      errorEl.textContent = err;
-      this.errorsContainer.appendChild(errorEl);
-    });
-  }
+  // setErrors(errors: string[]) {
+  //   this.errorsContainer.innerHTML = '';
+  //   errors.forEach((err) => {
+  //     const errorEl = document.createElement('div');
+  //     errorEl.textContent = err;
+  //     this.errorsContainer.appendChild(errorEl);
+  //   });
+  // }
 
-  // Метод для управления состоянием кнопки
   setSubmitDisabled(disabled: boolean) {
     this.submitButton.disabled = disabled;
   }
 
-  // Главный публичный метод — отдаем весь блок формы
   getElement(): HTMLFormElement {
     return this.element;
   }

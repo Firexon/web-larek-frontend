@@ -12,7 +12,7 @@ import { OrderModel } from './components/models/OrderModel';
 import { CardView } from './components/views/CardView';
 import { CardPreviewView } from './components/views/CardPreviewView';
 import { CartView } from './components/views/CartView';
-import { CartItemView } from './components/views/CartItemView';
+// import { CartItemView } from './components/views/CartItemView';
 import { ModalView } from './components/views/ModalView';
 import { SuccessView } from './components/views/SuccessView';
 import { OrderForm } from './components/views/OrderForm';
@@ -39,54 +39,44 @@ const catalogModel = new CatalogModel();
 const cartModel = new CartModel(events); 
 const orderModel = new OrderModel();
 const pageView = new PageView();
-const cartItemView = new CartItemView(cartItemTemplate, {
-  onClick: (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    const id = target.closest('[data-id]')?.getAttribute('data-id'); 
-
-    if (id) {
-      cartModel.removeItem(id);
-      events.emit('basket:change');
-      events.emit('cart:changed', { count: cartModel.getItems().length });
-    }
-  }
-});
+const orderFormView = new OrderForm(orderTemplate);
+const contactsFormView = new ContactsForm(contactsTemplate);
+const successView = new SuccessView(document.getElementById('success') as HTMLTemplateElement);
 
 const cartView = new CartView(
   cartTemplate,
   () => events.emit('order:open'),
-  cartItemTemplate,            // <-- это HTMLTemplateElement для CartItem
+  cartItemTemplate,       
   {
     onClick: (event) => {
       const target = event.target as HTMLElement;
       const id = target.dataset.id;
       if (id) {
         cartModel.removeItem(id);
-        events.emit('basket:change');
+        events.emit('cart:changed', { count: cartModel.getItems().length });
       }
     }
   }
 );
-const orderFormView = new OrderForm(orderTemplate);
-const contactsFormView = new ContactsForm(contactsTemplate);
-const successView = new SuccessView(document.getElementById('success') as HTMLTemplateElement);
 
 //  Отрисовка товаров
 function renderCatalog() {
-  pageView.render(); 
+  pageView.render();
   const gallery = pageView.getElement();
-  gallery.innerHTML = '';
-
-  catalogModel.getItems().forEach((item) => {
+  const cards = catalogModel.getItems().map((item) => {
     const card = new CardView(cardTemplate, {
       onClick: () => {
         catalogModel.setPreview(item);
         events.emit('preview:open', item);
       },
     });
-    gallery.appendChild(card.render(item));
+    return card.render(item);
   });
+  gallery.replaceChildren(...cards);
 }
+
+// События
+events.on('products:loaded', renderCatalog);
 
 //  Открытие превью
 events.on('preview:open', (item: IItem) => {
@@ -106,7 +96,6 @@ events.on('preview:open', (item: IItem) => {
         cartModel.addItem(selected);
       }
 
-      events.emit('basket:change'); 
       events.emit('modal:close');
       events.emit('cart:open');
     }
@@ -119,80 +108,28 @@ events.on('preview:open', (item: IItem) => {
 });
 
 events.on('basket:change', () => {
-  const items = cartModel.getItems();
-  const total = cartModel.getTotal();
+  cartView.render({
+    items: cartModel.getItems(),
+    total: cartModel.getTotal()
+  });
 
-  cartView.render({ items, total });
-  events.emit('cart:changed', { count: items.length });
+  pageView.setCartCount(cartModel.getItems().length);
 });
 
-// events.on('basket:change', () => {
-//   const list = cartView.getListContainer();
-//   list.innerHTML = '';
-//   cartModel.getItems().forEach((item, index) => {
-//     const cartItem = new CartItemView(cartItemTemplate, {
-//       onClick: () => {
-//         cartModel.removeItem(item.id);
-//         events.emit('basket:change'); 
-//         events.emit('cart:changed', { count: cartModel.getItems().length }); 
-//       },
-//     });
-//     list.appendChild(cartItem.render(item, index));
-//   });
-
-//   cartView.setTotal(cartModel.getTotal());
-//   cartView.setSubmitButtonState(cartModel.getItems().length > 0);
-// });
-
 events.on('cart:open', () => {
-  const items = cartModel.getItems();
-  const total = cartModel.getTotal();
+  cartView.render({
+    items: cartModel.getItems(),
+    total: cartModel.getTotal()
+  });
 
-  cartView.render({ items, total });
   modal.setContent(cartView.getElement());
   modal.open();
 });
-
-// events.on('cart:open', () => {
-//   const list = cartView.getListContainer();
-//   list.innerHTML = '';
-//   cartModel.getItems().forEach((item, index) => {
-//     const cartItem = new CartItemView(cartItemTemplate, {
-//       onClick: () => {
-//         cartModel.removeItem(item.id);
-//         events.emit('basket:change'); 
-//       },
-//     });
-//     list.appendChild(cartItem.render(item, index));
-//   });
-
-//   cartView.setTotal(cartModel.getTotal());
-
-//   const submitButton = cartView.getSubmitButton();
-//   submitButton.disabled = cartModel.getItems().length === 0;
-
-//   submitButton.addEventListener('click', () => {
-//     events.emit('order:open');
-//   });
-
-//   modal.setContent(cartView.getElement());
-//   modal.open();
-// });
 
 // Слушатель кнопки корзины
 pageView.onBasketClick(() => {
   events.emit('cart:open');
 });
-
-// Слушатель на изменение корзины
-events.on('cart:changed', (event: { count: number }) => {
-  pageView.setCartCount(event.count);
-
-  const items = cartModel.getItems();
-  const total = cartModel.getTotal();
-  cartView.render({ items, total });
-});
-
 
 events.on('order:open', () => {
   orderModel.reset();
@@ -204,8 +141,8 @@ events.on('order:open', () => {
 });
 
 events.on('contacts:open', () => {
-  contactsFormView.render(); // готовим форму
-  modal.setContent(contactsFormView.getElement()); // вставляем весь блок
+  contactsFormView.render();
+  modal.setContent(contactsFormView.getElement());
   modal.open();
 });
 
@@ -222,12 +159,10 @@ events.on('order:validated:contacts', (payload: { isValid: boolean }) => {
 });
 
 events.on('order:submit', () => {
-  const orderData = orderModel.getOrder(
-    cartModel.getItems().map((item) => item.id),
-    cartModel.getTotal()
-  );
+  const items = cartModel.getItems().map(item => item.id);
+  const total = cartModel.getTotal();
 
-  api.post('/order', orderData)
+  orderModel.submitOrder(items, total)
     .then((response: IOrderResponse) => {
       events.emit('order:success', response);
     })
@@ -238,28 +173,22 @@ events.on('order:submit', () => {
 
 // успешный заказ
 events.on('order:success', (res: IOrderResponse) => {
-  successView.render(res); // просто подготавливает содержимое
+  successView.render(res); 
   modal.setContent(successView.getElement()); 
   modal.open();
 
   cartModel.clear();
-  events.emit('basket:change');
 });
-
 
 // Pакрытие модалки
 events.on('modal:close', () => {
   modal.close();
-  events.emit('basket:change');
 });
 
-//  Получение данных и запуск
 api.get('/product')
   .then((data) => {
     const typedData = data as ApiListResponse<IItem>;
-    catalogModel.setItems(typedData.items);
-    renderCatalog();
-    events.emit('cart:changed', { count: cartModel.getItems().length });
+    catalogModel.setItems(typedData.items); 
   })
   .catch((err) => {
     console.error('Ошибка загрузки товаров:', err);

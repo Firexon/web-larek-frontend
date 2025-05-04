@@ -3,17 +3,21 @@ import { events } from '../base/events';
 
 export class SuccessView {
   protected element: HTMLElement;
+  protected description: HTMLElement;
+  protected closeButton: HTMLButtonElement;
 
   constructor(template: HTMLTemplateElement) {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+    this.description = this.element.querySelector('.order-success__description')!;
+    this.closeButton = this.element.querySelector('.order-success__close')!;
+
+    this.closeButton.addEventListener('click', this._handleClick);
   }
 
-  render(order: IOrderResponse): void {
-    this.element.querySelector('.order-success__description')!.textContent = `Списано ${order.total} синапсов`;
-  
-    const button = this.element.querySelector('.order-success__close')!;
-    button.removeEventListener('click', this._handleClick);
-    button.addEventListener('click', this._handleClick);
+  render(order: IOrderResponse): HTMLElement {
+    this.description.textContent = `Списано ${order.total} синапсов`;
+    return this.element;
   }
 
   private _handleClick = () => {
@@ -23,9 +27,4 @@ export class SuccessView {
   getElement(): HTMLElement {
     return this.element;
   }
-
-  getButton(): HTMLButtonElement {
-    return this.element.querySelector('.order-success__close')!;
-  }
 }
-
