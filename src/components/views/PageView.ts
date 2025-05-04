@@ -1,9 +1,11 @@
 export class PageView {
+  protected element: HTMLElement;
   protected basketButton: HTMLElement;
   protected cartCounter: HTMLElement;
   protected gallery: HTMLElement;
 
   constructor() {
+    this.element = document.body;
     this.basketButton = document.querySelector('.header__basket')!;
     this.cartCounter = document.querySelector('.header__basket-counter')!;
     this.gallery = document.querySelector('.gallery')!;
@@ -13,6 +15,10 @@ export class PageView {
   }
 
   public getElement(): HTMLElement {
+    return this.element;
+  }
+
+  public getGallery(): HTMLElement {
     return this.gallery;
   }
 

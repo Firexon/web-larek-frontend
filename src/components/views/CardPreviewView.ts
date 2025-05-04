@@ -4,13 +4,24 @@ import { CDN_URL } from '../../utils/constants';
 export class CardPreviewView {
   protected element: HTMLElement;
   protected button: HTMLButtonElement;
+  protected title: HTMLElement;
+  protected text: HTMLElement;
+  protected price: HTMLElement;
+  protected image: HTMLImageElement;
+  protected category: HTMLElement;
 
   protected data: IItem | null = null;
   protected inCart: boolean = false;
 
   constructor(template: HTMLTemplateElement, handlers: IClickHandler) {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
     this.button = this.element.querySelector('.card__button') as HTMLButtonElement;
+    this.title = this.element.querySelector('.card__title')!;
+    this.text = this.element.querySelector('.card__text')!;
+    this.price = this.element.querySelector('.card__price')!;
+    this.image = this.element.querySelector('.card__image') as HTMLImageElement;
+    this.category = this.element.querySelector('.card__category')!;
 
     this.button.addEventListener('click', (event) => {
       if (this.button.disabled) return;
@@ -26,18 +37,12 @@ export class CardPreviewView {
   public render(): void {
     if (!this.data) return;
 
-    const title = this.element.querySelector('.card__title')!;
-    const text = this.element.querySelector('.card__text')!;
-    const price = this.element.querySelector('.card__price')!;
-    const image = this.element.querySelector('.card__image') as HTMLImageElement;
-    const category = this.element.querySelector('.card__category')!;
-
-    title.textContent = this.data.title;
-    text.textContent = this.data.description;
-    price.textContent = `${this.data.price ?? 0} синапсов`;
-    image.src = `${CDN_URL}${this.data.image}`;
-    image.alt = this.data.title;
-    category.textContent = this.data.category;
+    this.title.textContent = this.data.title;
+    this.text.textContent = this.data.description;
+    this.price.textContent = `${this.data.price ?? 0} синапсов`;
+    this.image.src = `${CDN_URL}${this.data.image}`;
+    this.image.alt = this.data.title;
+    this.category.textContent = this.data.category;
 
     const colorMap: Record<string, string> = {
       'софт-скил': 'soft',
@@ -48,10 +53,10 @@ export class CardPreviewView {
       'кнопка': 'button',
     };
 
-    category.className = 'card__category';
+    this.category.className = 'card__category';
     const classSuffix = colorMap[this.data.category];
     if (classSuffix) {
-      category.classList.add(`card__category_${classSuffix}`);
+      this.category.classList.add(`card__category_${classSuffix}`);
     }
 
     const isSellable = this.data.price !== null && this.data.price > 0;
@@ -65,4 +70,5 @@ export class CardPreviewView {
     return this.element;
   }
 }
+
 

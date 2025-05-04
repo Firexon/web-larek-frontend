@@ -61,8 +61,8 @@ const cartView = new CartView(
 
 //  Отрисовка товаров
 function renderCatalog() {
-  pageView.render();
-  const gallery = pageView.getElement();
+  const gallery = pageView.getGallery();
+
   const cards = catalogModel.getItems().map((item) => {
     const card = new CardView(cardTemplate, {
       onClick: () => {
@@ -70,8 +70,11 @@ function renderCatalog() {
         events.emit('preview:open', item);
       },
     });
-    return card.render(item);
+
+    card.render(item);
+    return card.getElement();
   });
+
   gallery.replaceChildren(...cards);
 }
 
