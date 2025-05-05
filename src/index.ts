@@ -12,14 +12,14 @@ import { OrderModel } from './components/models/OrderModel';
 import { CardView } from './components/views/CardView';
 import { CardPreviewView } from './components/views/CardPreviewView';
 import { CartView } from './components/views/CartView';
-// import { CartItemView } from './components/views/CartItemView';
+import { CartItemView } from './components/views/CartItemView';
 import { ModalView } from './components/views/ModalView';
 import { SuccessView } from './components/views/SuccessView';
 import { OrderForm } from './components/views/OrderForm';
 import { ContactsForm } from './components/views/ContactsForm';
 import { PageView } from './components/views/PageView';
 
-import { IItem, ISelectedItem,  IOrderResponse, IOrderForm  } from './types';
+import { IItem, ISelectedItem,  IOrderResponse, IOrderForm, IServerOrder  } from './types';
 
 //  Представления 
 const modal = new ModalView(document.querySelector('#modal-container') as HTMLElement);
@@ -45,18 +45,7 @@ const successView = new SuccessView(document.getElementById('success') as HTMLTe
 
 const cartView = new CartView(
   cartTemplate,
-  () => events.emit('order:open'),
-  cartItemTemplate,       
-  {
-    onClick: (event) => {
-      const target = event.target as HTMLElement;
-      const id = target.dataset.id;
-      if (id) {
-        cartModel.removeItem(id);
-        events.emit('cart:changed', { count: cartModel.getItems().length });
-      }
-    }
-  }
+  () => events.emit('order:open')
 );
 
 //  Отрисовка товаров
@@ -100,7 +89,9 @@ events.on('preview:open', (item: IItem) => {
       }
 
       events.emit('modal:close');
-      events.emit('cart:open');
+      events.emit('basket:change');
+      modal.setContent(cartView.getElement());
+      modal.open();
     }
   });
 
@@ -111,27 +102,32 @@ events.on('preview:open', (item: IItem) => {
 });
 
 events.on('basket:change', () => {
-  cartView.render({
-    items: cartModel.getItems(),
-    total: cartModel.getTotal()
+  const items = cartModel.getItems();
+
+  const itemElements = items.map((item, index) => {
+    const itemView = new CartItemView(cartItemTemplate, {
+      onClick: () => {
+        cartModel.removeItem(item.id);
+        events.emit('cart:changed', { count: cartModel.getItems().length });
+        events.emit('basket:change'); 
+      }
+    });
+
+    itemView.setData(item, index);
+    return itemView.getElement();
   });
 
-  pageView.setCartCount(cartModel.getItems().length);
-});
-
-events.on('cart:open', () => {
-  cartView.render({
-    items: cartModel.getItems(),
-    total: cartModel.getTotal()
-  });
-
-  modal.setContent(cartView.getElement());
-  modal.open();
+  cartView.setItems(itemElements);
+  cartView.setTotal(cartModel.getTotal());
+  cartView.setSubmitDisabled(items.length === 0);
+  pageView.setCartCount(items.length);
 });
 
 // Слушатель кнопки корзины
 pageView.onBasketClick(() => {
-  events.emit('cart:open');
+  events.emit('basket:change');
+  modal.setContent(cartView.getElement());
+  modal.open();
 });
 
 events.on('order:open', () => {
@@ -165,7 +161,9 @@ events.on('order:submit', () => {
   const items = cartModel.getItems().map(item => item.id);
   const total = cartModel.getTotal();
 
-  orderModel.submitOrder(items, total)
+  const orderData = orderModel.getOrderData(items, total);
+
+  api.post('/order', orderData)
     .then((response: IOrderResponse) => {
       events.emit('order:success', response);
     })

@@ -1,6 +1,4 @@
-import { IOrderForm, IServerOrder, IOrderResponse } from '../../types';
-import { Api } from '../base/api';
-import { API_URL } from '../../utils/constants';
+import { IOrderForm, IServerOrder } from '../../types';
 import { events } from '../base/events';
 
 export class OrderModel {
@@ -11,18 +9,12 @@ export class OrderModel {
     payment: '',
   };
 
-  private api: Api;
-
-  constructor() {
-    this.api = new Api(API_URL);
-  }
-
   reset() {
     this.data = {
       address: '',
-      payment: '',
-      email: '',
       phone: '',
+      email: '',
+      payment: '',
     };
   }
 
@@ -46,16 +38,11 @@ export class OrderModel {
     events.emit('order:validated:contacts', { isValid });
   }
 
-  getOrder(): Required<IOrderForm> {
-    return this.data as Required<IOrderForm>;
-  }
-
-  clear() {
-    this.data = {
-      address: '',
-      phone: '',
-      email: '',
-      payment: '',
+  getOrderData(items: string[], total: number): IServerOrder {
+    return {
+      ...this.data as Required<IOrderForm>,
+      items,
+      total,
     };
   }
 
@@ -67,13 +54,8 @@ export class OrderModel {
     return this.data.payment;
   }
 
-  submitOrder(items: string[], total: number): Promise<IOrderResponse> {
-    const order: IServerOrder = {
-      ...this.getOrder(),
-      items,
-      total,
-    };
-
-    return this.api.post('/order', order) as Promise<IOrderResponse>;
+  clear() {
+    this.reset();
   }
 }
+
