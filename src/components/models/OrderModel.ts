@@ -38,12 +38,8 @@ export class OrderModel {
     events.emit('order:validated:contacts', { isValid });
   }
 
-  getOrderData(items: string[], total: number): IServerOrder {
-    return {
-      ...this.data as Required<IOrderForm>,
-      items,
-      total,
-    };
+  getUserData(): Required<IOrderForm> {
+    return this.data as Required<IOrderForm>;
   }
 
   getAddress() {

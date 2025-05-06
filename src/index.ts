@@ -108,7 +108,7 @@ events.on('basket:change', () => {
     const itemView = new CartItemView(cartItemTemplate, {
       onClick: () => {
         cartModel.removeItem(item.id);
-        events.emit('cart:changed', { count: cartModel.getItems().length });
+        // events.emit('cart:changed', { count: cartModel.getItems().length });
         events.emit('basket:change'); 
       }
     });
@@ -158,10 +158,11 @@ events.on('order:validated:contacts', (payload: { isValid: boolean }) => {
 });
 
 events.on('order:submit', () => {
-  const items = cartModel.getItems().map(item => item.id);
-  const total = cartModel.getTotal();
-
-  const orderData = orderModel.getOrderData(items, total);
+  const orderData: IServerOrder = {
+    ...orderModel.getUserData(),
+    items: cartModel.getItems().map(item => item.id),
+    total: cartModel.getTotal(),
+  };
 
   api.post('/order', orderData)
     .then((response: IOrderResponse) => {
